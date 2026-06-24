@@ -1,0 +1,43 @@
+# Конфигурация эксперимента по умолчанию
+# configs/default.yaml — гиперпараметры и пути к данным
+
+project:
+  name: "road-scene-detection"
+  seed: 42
+  device: "cuda"  # "cuda" или "cpu"
+
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  dataset: "coco_subset"
+  classes: ["person", "car", "bicycle", "motorcycle", "bus", "traffic light"]
+  image_size: 640
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+
+model:
+  name: "yolov8"  # yolov8 | faster_rcnn | ssd | efficientdet | detr
+  pretrained: true
+  num_classes: 6
+
+training:
+  epochs: 50
+  batch_size: 16
+  learning_rate: 0.001
+  optimizer: "adam"  # adam | sgd
+  weight_decay: 0.0005
+  lr_scheduler: "cosine"
+
+augmentation:
+  horizontal_flip: 0.5
+  color_jitter: 0.3
+  random_crop: true
+
+evaluation:
+  metrics: ["mAP", "precision", "recall", "f1"]
+  iou_threshold: 0.5
+
+logging:
+  results_dir: "results"
+  log_interval: 10

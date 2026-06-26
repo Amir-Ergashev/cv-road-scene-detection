@@ -20,6 +20,8 @@ from src.dataset.dataset import (
     filter_coco_by_classes,
     print_dataset_stats,
     save_filtered_annotations,
+    split_dataset,
+    print_split_stats,
 )
 
 RAW_ANNOTATIONS = "data/raw/annotations/instances_val2017.json"
@@ -65,6 +67,13 @@ def main():
 
     save_filtered_annotations(filtered, PROCESSED_ANNOTATIONS)
     visualize_example(filtered, RAW_IMAGES_DIR, EXAMPLE_OUTPUT)
+
+    print("\nРазбиение на train/val/test (70/15/15)...")
+    splits = split_dataset(filtered, train_ratio=0.7, val_ratio=0.15, test_ratio=0.15, seed=42)
+    print_split_stats(splits)
+
+    for split_name, subset in splits.items():
+        save_filtered_annotations(subset, f"data/processed/instances_{split_name}.json")
 
 
 if __name__ == "__main__":

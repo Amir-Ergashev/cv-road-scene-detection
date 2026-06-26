@@ -8,6 +8,7 @@ src/dataset/dataset.py
 """
 
 import json
+import random
 from collections import Counter
 from pathlib import Path
 
@@ -66,6 +67,48 @@ def save_filtered_annotations(filtered: dict, output_path: str) -> None:
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(filtered, f)
     print(f"Сохранено: {output_path}")
+
+
+def split_dataset(filtered: dict, train_ratio: float = 0.7, val_ratio: float = 0.15,
+                   test_ratio: float = 0.15, seed: int = 42) -> dict:
+    """
+    Разбивает отфильтрованный COCO-датасет на train/val/test по изображениям
+    (раздел 3.4 методички: train_split=0.7, val_split=0.15, test_split=0.15).
+
+    Разбиение выполняется на уровне изображений (не аннотаций), чтобы все
+    объекты одного изображения попадали в один и тот же сплит. seed
+    фиксирован для воспроизводимости экспериментов.
+    """
+    assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-6, "Доли должны суммироваться в 1.0"
+
+    rng = random.Random(seed)
+    image_ids = [img["id"] for img in filtered["images"]]
+    rng.shuffle(image_ids)
+
+    n = len(image_ids)
+    n_train = int(n * train_ratio)
+    n_val = int(n * val_ratio)
+
+    train_ids = set(image_ids[:n_train])
+    val_ids = set(image_ids[n_train:n_train + n_val])
+    test_ids = set(image_ids[n_train + n_val:])
+
+    def make_subset(ids: set) -> dict:
+        images = [img for img in filtered["images"] if img["id"] in ids]
+        annotations = [a for a in filtered["annotations"] if a["image_id"] in ids]
+        return {"images": images, "annotations": annotations, "categories": filtered["categories"]}
+
+    return {
+        "train": make_subset(train_ids),
+        "val": make_subset(val_ids),
+        "test": make_subset(test_ids),
+    }
+
+
+def print_split_stats(splits: dict) -> None:
+    """Печатает статистику по получившимся train/val/test сплитам."""
+    for name, subset in splits.items():
+        print(f"{name}: {len(subset['images'])} изображений, {len(subset['annotations'])} аннотаций")
 
 
 class RoadSceneDataset(Dataset):

@@ -1,0 +1,6 @@
+path: data/yolo_format
+train: train/images
+val: val/images
+test: test/images
+nc: 6
+names: ['person', 'car', 'bicycle', 'motorcycle', 'bus', 'traffic light']

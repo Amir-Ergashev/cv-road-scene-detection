@@ -5,11 +5,18 @@ src/models/yolo.py
 Реализуется на этапе "Baseline-модель" (день 7 плана).
 """
 
+from ultralytics import YOLO
 
-def build_yolo_model(num_classes: int, pretrained: bool = True):
+
+def build_yolo_model(model_size: str = "n", pretrained: bool = True) -> YOLO:
     """
     Создаёт модель YOLOv8 для детекции объектов.
 
-    TODO: from ultralytics import YOLO; YOLO("yolov8n.pt")
+    model_size: "n" (nano, самая лёгкая, рекомендуется для CPU),
+                "s" (small), "m" (medium) и т.д.
+    pretrained: если True — загружает веса, предобученные на полном COCO
+                (transfer learning); если False — обучение архитектуры с нуля.
     """
-    raise NotImplementedError
+    if pretrained:
+        return YOLO(f"yolov8{model_size}.pt")
+    return YOLO(f"yolov8{model_size}.yaml")

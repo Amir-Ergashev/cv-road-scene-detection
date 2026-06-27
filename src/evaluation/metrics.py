@@ -5,12 +5,111 @@ src/evaluation/metrics.py
 Реализуется на этапе "Эксперименты" / "Анализ результатов" (день 10-11 плана).
 """
 
+import torch
+from torchvision.ops import box_iou
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
-def compute_map(predictions, ground_truth, iou_threshold: float = 0.5):
-    """Вычисляет mean Average Precision (mAP) при заданном IoU threshold."""
-    raise NotImplementedError
+
+def compute_precision_recall_f1(all_preds, all_targets, iou_threshold: float = 0.5) -> dict:
+    """
+    Считает Precision/Recall/F1 по принципу сопоставления предсказаний и
+    эталонной разметки через IoU (предсказание = True Positive, если класс
+    совпадает и IoU >= iou_threshold с ближайшим непрошедшим GT-объектом).
+
+    all_preds: список словарей {"boxes", "scores", "labels"} (по изображениям)
+    all_targets: список словарей {"boxes", "labels"} в том же порядке
+    """
+    tp, fp, fn = 0, 0, 0
+
+    for preds, targets in zip(all_preds, all_targets):
+        pred_boxes = preds["boxes"]
+        pred_labels = preds["labels"]
+        gt_boxes = targets["boxes"]
+        gt_labels = targets["labels"]
+
+        matched_gt = set()
+
+        if len(pred_boxes) == 0:
+            fn += len(gt_boxes)
+            continue
+        if len(gt_boxes) == 0:
+            fp += len(pred_boxes)
+            continue
+
+        ious = box_iou(pred_boxes, gt_boxes)
+
+        for pred_idx in range(len(pred_boxes)):
+            best_iou, best_gt_idx = 0.0, -1
+            for gt_idx in range(len(gt_boxes)):
+                if gt_idx in matched_gt:
+                    continue
+                if pred_labels[pred_idx] != gt_labels[gt_idx]:
+                    continue
+                iou_val = ious[pred_idx, gt_idx].item()
+                if iou_val > best_iou:
+                    best_iou, best_gt_idx = iou_val, gt_idx
+
+            if best_iou >= iou_threshold:
+                tp += 1
+                matched_gt.add(best_gt_idx)
+            else:
+                fp += 1
+
+        fn += len(gt_boxes) - len(matched_gt)
+
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+
+    return {"precision": precision, "recall": recall, "f1": f1, "tp": tp, "fp": fp, "fn": fn}
 
 
-def compute_precision_recall_f1(predictions, ground_truth, iou_threshold: float = 0.5):
-    """Вычисляет Precision, Recall и F1-score."""
-    raise NotImplementedError
+def compute_map(all_preds, all_targets, iou_thresholds: list = None) -> dict:
+    """
+    Вычисляет mAP при заданных порогах IoU (по умолчанию 0.5 и стандартный
+    диапазон 0.5:0.95, как в COCO eval) с помощью torchmetrics.
+    """
+    iou_thresholds = iou_thresholds or [0.5]
+    metric = MeanAveragePrecision(iou_thresholds=iou_thresholds)
+    metric.update(all_preds, all_targets)
+    result = metric.compute()
+    return {
+        "map": result["map"].item(),
+        "map_50": result["map_50"].item(),
+    }
+
+
+@torch.no_grad()
+def evaluate_torchvision_model(model, data_loader, device: str, class_list: list) -> dict:
+    """
+    Прогоняет модель (Faster R-CNN, SSD) по data_loader и считает mAP@0.5,
+    mAP@0.5:0.95, Precision, Recall, F1 на полном датасете.
+    """
+    model.eval()
+    all_preds, all_targets = [], []
+
+    for images, targets in data_loader:
+        images = [img.to(device) for img in images]
+        outputs = model(images)
+
+        for output, target in zip(outputs, targets):
+            all_preds.append({
+                "boxes": output["boxes"].cpu(),
+                "scores": output["scores"].cpu(),
+                "labels": output["labels"].cpu(),
+            })
+            all_targets.append({
+                "boxes": target["boxes"].cpu(),
+                "labels": target["labels"].cpu(),
+            })
+
+    map_metrics = compute_map(all_preds, all_targets, iou_thresholds=[0.5])
+    prf1_metrics = compute_precision_recall_f1(all_preds, all_targets, iou_threshold=0.5)
+
+    return {
+        "mAP50": map_metrics["map_50"],
+        "mAP": map_metrics["map"],
+        "precision": prf1_metrics["precision"],
+        "recall": prf1_metrics["recall"],
+        "f1": prf1_metrics["f1"],
+    }

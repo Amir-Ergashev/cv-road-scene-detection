@@ -2,10 +2,7 @@
 train_efficientdet.py
 
 Обучение EfficientDet-D0 (день 8-9 плана / раздел 8.3-8.4 методички).
-
 Использует библиотеку effdet (Ross Wightman) + timm для backbone.
-EfficientDet работает с разрешением 512x512 и собственным форматом данных
-(боксы в YXYX, классы без отдельного фона) — отличается от torchvision API.
 
 Запуск:
     python train_efficientdet.py
@@ -25,10 +22,10 @@ from src.evaluation.metrics import compute_map, compute_precision_recall_f1
 RAW_IMAGES_DIR = "data/raw/images/val2017"
 PROCESSED_DIR = "data/processed"
 
-NUM_CLASSES = len(TARGET_CLASSES)  # БЕЗ фона (effdet не использует класс фона)
+NUM_CLASSES = len(TARGET_CLASSES)
 IMAGE_SIZE = 512
 EPOCHS = 15
-BATCH_SIZE = 8  # EfficientDet+512px требовательнее к памяти, чем YOLOv8/SSD
+BATCH_SIZE = 8
 LEARNING_RATE = 0.001
 WARMUP_STEPS = 200
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -124,7 +121,6 @@ def main():
             all_preds.extend([{k: v.cpu() for k, v in p.items()} for p in preds])
 
             for bbox, cls in zip(targets["bbox"], targets["cls"]):
-                # GT тоже хранится в YXYX -> конвертируем в XYXY для совместимости с box_iou
                 if len(bbox) > 0:
                     y1, x1, y2, x2 = bbox[:, 0], bbox[:, 1], bbox[:, 2], bbox[:, 3]
                     boxes_xyxy = torch.stack([x1, y1, x2, y2], dim=1)

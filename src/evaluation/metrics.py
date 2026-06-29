@@ -16,6 +16,9 @@ def compute_precision_recall_f1(all_preds, all_targets, iou_threshold: float = 0
     эталонной разметки через IoU (предсказание = True Positive, если класс
     совпадает и IoU >= iou_threshold с ближайшим непрошедшим GT-объектом).
 
+    Предсказания обрабатываются в порядке убывания confidence score —
+    стандартная практика при расчёте Precision/Recall для детекции.
+
     all_preds: список словарей {"boxes", "scores", "labels"} (по изображениям)
     all_targets: список словарей {"boxes", "labels"} в том же порядке
     """
@@ -24,6 +27,7 @@ def compute_precision_recall_f1(all_preds, all_targets, iou_threshold: float = 0
     for preds, targets in zip(all_preds, all_targets):
         pred_boxes = preds["boxes"]
         pred_labels = preds["labels"]
+        pred_scores = preds.get("scores")
         gt_boxes = targets["boxes"]
         gt_labels = targets["labels"]
 
@@ -36,9 +40,16 @@ def compute_precision_recall_f1(all_preds, all_targets, iou_threshold: float = 0
             fp += len(pred_boxes)
             continue
 
+        # Сортируем индексы предсказаний по убыванию score (если score нет —
+        # оставляем исходный порядок).
+        if pred_scores is not None:
+            order = torch.argsort(pred_scores, descending=True).tolist()
+        else:
+            order = list(range(len(pred_boxes)))
+
         ious = box_iou(pred_boxes, gt_boxes)
 
-        for pred_idx in range(len(pred_boxes)):
+        for pred_idx in order:
             best_iou, best_gt_idx = 0.0, -1
             for gt_idx in range(len(gt_boxes)):
                 if gt_idx in matched_gt:

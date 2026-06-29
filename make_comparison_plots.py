@@ -1,12 +1,9 @@
 """
 make_comparison_plots.py
 
-Строит итоговые сравнительные графики по всем 5 обученным моделям
-для раздела 3.7 отчёта ("Результаты").
-
-Метрики взяты из реальных логов обучения (терминальный вывод
-train_yolo.py, train_faster_rcnn.py, train_ssd.py,
-train_efficientdet.py, train_detr.py).
+Строит итоговые сравнительные графики по всем 5 обученным моделям.
+Метрики взяты из логов обучения (вывод train_yolo.py,
+train_faster_rcnn.py, train_ssd.py, train_efficientdet.py, train_detr.py).
 
 Запуск:
     python make_comparison_plots.py

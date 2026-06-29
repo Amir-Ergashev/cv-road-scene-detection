@@ -25,8 +25,8 @@ RAW_IMAGES_DIR = "data/raw/images/val2017"
 PROCESSED_DIR = "data/processed"
 
 NUM_CLASSES = len(TARGET_CLASSES) + 1  # +1 для фона
-EPOCHS = 15
-BATCH_SIZE = 4  # Faster R-CNN требовательнее к памяти GPU, чем YOLOv8n
+EPOCHS = 10
+BATCH_SIZE = 16
 LEARNING_RATE = 0.005
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -44,12 +44,16 @@ def main():
 
     print(f"Train: {len(train_ds)} изображений, Val: {len(val_ds)} изображений")
 
-    model = build_faster_rcnn_model(num_classes=NUM_CLASSES, pretrained=True)
+    model = build_faster_rcnn_model(num_classes=NUM_CLASSES, pretrained=True, min_size=480, max_size=640)
     model.to(DEVICE)
 
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr=LEARNING_RATE, momentum=0.9, weight_decay=0.0005)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+
+    # Mixed precision (AMP) — заметно ускоряет обучение на современных GPU
+    use_amp = DEVICE == "cuda"
+    scaler = torch.amp.GradScaler("cuda") if use_amp else None
 
     for epoch in range(1, EPOCHS + 1):
         model.train()
@@ -61,12 +65,20 @@ def main():
             images = [img.to(DEVICE) for img in images]
             targets = [{k: v.to(DEVICE) for k, v in t.items()} for t in targets]
 
-            loss_dict = model(images, targets)
-            losses = sum(loss for loss in loss_dict.values())
-
             optimizer.zero_grad()
-            losses.backward()
-            optimizer.step()
+
+            if use_amp:
+                with torch.amp.autocast("cuda"):
+                    loss_dict = model(images, targets)
+                    losses = sum(loss for loss in loss_dict.values())
+                scaler.scale(losses).backward()
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss_dict = model(images, targets)
+                losses = sum(loss for loss in loss_dict.values())
+                losses.backward()
+                optimizer.step()
 
             epoch_loss += losses.item()
             progress.set_postfix(loss=f"{losses.item():.4f}")

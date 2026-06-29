@@ -2,11 +2,7 @@
 train_detr.py
 
 Обучение DETR (день 8-9 плана / раздел 8.3-8.4 методички).
-
-Использует библиотеку transformers (HuggingFace). DETR — трансформерная
-архитектура, обычно требует больше эпох для сходимости, чем CNN-based
-модели (см. раздел 3.2 отчёта — известное ограничение DETR на мелких
-объектах и при недостатке данных/эпох обучения).
+Использует библиотеку transformers (HuggingFace).
 
 Запуск:
     python train_detr.py
@@ -27,10 +23,10 @@ from src.evaluation.metrics import compute_map, compute_precision_recall_f1
 RAW_IMAGES_DIR = "data/raw/images/val2017"
 PROCESSED_DIR = "data/processed"
 
-NUM_CLASSES = len(TARGET_CLASSES)  # БЕЗ фона (DETR обрабатывает "no object" отдельно)
-EPOCHS = 8  # DETR медленный; уменьшено с 15 для разумного времени обучения
-BATCH_SIZE = 8  # увеличен благодаря уменьшенному разрешению (480/640 вместо 800/1333)
-LEARNING_RATE = 1e-5  # transfer learning -> малый LR, как рекомендуется для DETR
+NUM_CLASSES = len(TARGET_CLASSES)
+EPOCHS = 8
+BATCH_SIZE = 8
+LEARNING_RATE = 1e-5
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
@@ -108,8 +104,6 @@ def main():
             all_preds.extend([{k: v.cpu() for k, v in r.items()} for r in results])
 
             for t in labels:
-                # labels из processor хранят боксы в нормализованном cxcywh —
-                # конвертируем в абсолютные xyxy для сопоставимости с предсказаниями
                 h, w = t["orig_size"].tolist()
                 boxes_cxcywh = t["boxes"]
                 cx, cy, bw, bh = boxes_cxcywh.unbind(-1)

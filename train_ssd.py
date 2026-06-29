@@ -3,9 +3,6 @@ train_ssd.py
 
 Обучение SSD300 (день 8-9 плана / раздел 8.3-8.4 методички).
 
-SSD работает с фиксированным разрешением 300x300 — заметно меньше, чем
-Faster R-CNN, поэтому обучение быстрее и можно использовать больший batch_size.
-
 Запуск:
     python train_ssd.py
 """
@@ -27,8 +24,8 @@ PROCESSED_DIR = "data/processed"
 NUM_CLASSES = len(TARGET_CLASSES) + 1  # +1 для фона
 EPOCHS = 15
 BATCH_SIZE = 16
-LEARNING_RATE = 0.0015  # типичный диапазон для SSD300+SGD: 0.001-0.0026
-WARMUP_STEPS = 200  # плавный разогрев LR в начале обучения для стабильности
+LEARNING_RATE = 0.0015
+WARMUP_STEPS = 200
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
@@ -52,9 +49,7 @@ def main():
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr=LEARNING_RATE, momentum=0.9, weight_decay=0.0005)
 
-    # Линейный разогрев LR с малого значения до LEARNING_RATE за WARMUP_STEPS
-    # шагов — стандартный приём против NaN/расходимости в начале обучения,
-    # когда градиенты от случайно инициализированной головы ещё нестабильны.
+    # Разогрев LR в начале обучения для стабильности
     def warmup_lambda(step):
         if step < WARMUP_STEPS:
             return step / WARMUP_STEPS
@@ -65,9 +60,7 @@ def main():
 
     global_step = 0
 
-    # ВАЖНО: AMP (mixed precision) отключён для SSD — известная проблема
-    # numerical instability (NaN loss) у SSD loss-функции при float16.
-    # Используем полную точность float32 — немного медленнее, но стабильно.
+    # AMP отключён - на SSD даёт нестабильный loss
     use_amp = False
 
     for epoch in range(1, EPOCHS + 1):
@@ -86,13 +79,10 @@ def main():
             losses = sum(loss for loss in loss_dict.values())
 
             if not torch.isfinite(losses):
-                # Пропускаем нестабильный шаг вместо того, чтобы "заразить"
-                # веса модели NaN-значениями навсегда.
                 progress.set_postfix(loss="skipped (non-finite)")
                 continue
 
             losses.backward()
-            # gradient clipping — дополнительная защита от расходящихся градиентов
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
             optimizer.step()
 

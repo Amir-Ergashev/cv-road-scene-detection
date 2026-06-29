@@ -2,14 +2,7 @@
 train_yolo.py
 
 Обучение baseline-модели YOLOv8 (день 7 плана / раздел 8.3-8.4 методички).
-
-Параметры подобраны для обучения на GPU (RTX 4070):
-- модель yolov8n (nano);
-- полный размер изображений 640;
-- больше эпох, т.к. GPU значительно быстрее CPU.
-
-Для обучения на CPU верните DEVICE = "cpu", уменьшите IMG_SIZE до 416
-и EPOCHS до ~20 (иначе обучение будет идти очень долго).
+Конфигурация для GPU: yolov8n, размер изображений 640, 50 эпох.
 
 Запуск:
     python train_yolo.py
@@ -22,8 +15,6 @@ RAW_IMAGES_DIR = "data/raw/images/val2017"
 PROCESSED_DIR = "data/processed"
 YOLO_DATA_ROOT = "data/yolo_format"
 
-# Параметры обучения — настроены под GPU (RTX 4070). При обучении на CPU
-# верните DEVICE = "cpu" и уменьшите EPOCHS/IMG_SIZE.
 EPOCHS = 50
 IMG_SIZE = 640
 BATCH_SIZE = 16
@@ -59,11 +50,7 @@ def train_baseline():
         seed=42,
         patience=10,  # ранняя остановка, если нет улучшений 10 эпох
     )
-    # Примечание: ultralytics может сохранить результаты по пути
-    # runs/detect/results/logs/yolov8n_baseline/ (в зависимости от версии
-    # библиотеки) — точный путь будет показан в выводе как "Results saved to ...".
-    print("\nОбучение завершено. Смотрите точный путь к результатам в строке "
-          "'Results saved to ...' выше.")
+    print("\nОбучение завершено. Путь к результатам см. в строке 'Results saved to ...' выше.")
     return results
 
 

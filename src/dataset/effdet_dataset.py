@@ -24,10 +24,9 @@ class EffDetCocoDataset(Dataset):
     Оборачивает отфильтрованные COCO-аннотации (data/processed/instances_*.json)
     в формат effdet.
 
-    ВАЖНО: effdet ожидает боксы в формате [y1, x1, y2, x2] (YXYX), а не
-    привычном [x1, y1, x2, y2] — это особенность библиотеки, унаследованная
-    от оригинальной TensorFlow-реализации Google. Классы 1-индексированы
-    (без отдельного класса фона, в отличие от torchvision-моделей).
+    effdet ожидает боксы в формате [y1, x1, y2, x2] (YXYX), а не привычном
+    [x1, y1, x2, y2]. Классы 1-индексированы (без отдельного класса фона,
+    в отличие от torchvision-моделей).
     """
 
     def __init__(self, images_dir: str, annotations_path: str,

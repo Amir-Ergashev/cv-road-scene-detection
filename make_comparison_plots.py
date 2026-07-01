@@ -1,12 +1,6 @@
 """
-make_comparison_plots.py
-
-Строит итоговые сравнительные графики по всем 5 обученным моделям.
-Метрики взяты из логов обучения (вывод train_yolo.py,
-train_faster_rcnn.py, train_ssd.py, train_efficientdet.py, train_detr.py).
-
 Запуск:
-    python make_comparison_plots.py
+python make_comparison_plots.py
 """
 
 import os
@@ -16,7 +10,6 @@ import numpy as np
 
 OUTPUT_DIR = "results/plots"
 
-# Финальные метрики на val, полученные после обучения каждой модели
 RESULTS = {
     "YOLOv8":        {"mAP50": 0.338, "precision": 0.520, "recall": 0.336, "f1": None},
     "Faster R-CNN":  {"mAP50": 0.514, "precision": 0.277, "recall": 0.747, "f1": 0.404},
@@ -25,9 +18,6 @@ RESULTS = {
     "DETR":          {"mAP50": 0.114, "precision": 0.132, "recall": 0.631, "f1": 0.218},
 }
 
-# F1 для YOLOv8 не считался отдельной функцией (ultralytics использует
-# собственный встроенный расчёт) — оценим по стандартной формуле из P/R
-# для единообразия сравнения.
 p, r = RESULTS["YOLOv8"]["precision"], RESULTS["YOLOv8"]["recall"]
 RESULTS["YOLOv8"]["f1"] = 2 * p * r / (p + r) if (p + r) > 0 else 0.0
 
@@ -89,7 +79,6 @@ def plot_f1_comparison():
 
 
 def plot_radar_comparison():
-    """Радар-диаграмма для наглядного сравнения всех метрик сразу."""
     metrics = ["mAP50", "precision", "recall", "f1"]
     angles = np.linspace(0, 2 * np.pi, len(metrics), endpoint=False).tolist()
     angles += angles[:1]
@@ -98,7 +87,6 @@ def plot_radar_comparison():
 
     for i, model in enumerate(MODELS):
         values = [RESULTS[model][m] for m in metrics]
-        # Нормализуем mAP50, так как у SSD оно близко к 0 и теряется на фоне остальных
         values_norm = values.copy()
         values_norm += values_norm[:1]
         ax.plot(angles, values_norm, label=model, color=COLORS[i], linewidth=2)
@@ -114,7 +102,6 @@ def plot_radar_comparison():
 
 
 def plot_training_time_comparison():
-    """Сравнение времени обучения по моделям (секунд на эпоху)."""
     time_per_epoch = {
         "YOLOv8\n(GPU)": 15.0,        # ~2.76 мин / 11 эпох * 60
         "Faster R-CNN": 141.0,

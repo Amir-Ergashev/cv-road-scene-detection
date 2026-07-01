@@ -1,11 +1,6 @@
 """
-prepare_data.py
-
-Скрипт для подготовки датасета: фильтрация COCO по нужным классам,
-вывод статистики, сохранение результата, визуализация примера.
-
 Запуск:
-    python prepare_data.py
+python prepare_data.py
 """
 
 import json
@@ -31,7 +26,6 @@ EXAMPLE_OUTPUT = "results/plots/example_with_bbox.png"
 
 
 def visualize_example(filtered: dict, images_dir: str, output_path: str, seed: int = 42):
-    """Берёт случайное изображение из отфильтрованного датасета и рисует bbox."""
     random.seed(seed)
     cat_id_to_name = {c["id"]: c["name"] for c in filtered["categories"]}
 

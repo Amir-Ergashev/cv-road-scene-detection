@@ -1,27 +1,9 @@
-"""
-src/evaluation/metrics.py
-
-Вычисление метрик качества: mAP, Precision, Recall, F1-score.
-Реализуется на этапе "Эксперименты" / "Анализ результатов" (день 10-11 плана).
-"""
-
 import torch
 from torchvision.ops import box_iou
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 
 def compute_precision_recall_f1(all_preds, all_targets, iou_threshold: float = 0.5) -> dict:
-    """
-    Считает Precision/Recall/F1 по принципу сопоставления предсказаний и
-    эталонной разметки через IoU (предсказание = True Positive, если класс
-    совпадает и IoU >= iou_threshold с ближайшим непрошедшим GT-объектом).
-
-    Предсказания обрабатываются в порядке убывания confidence score —
-    стандартная практика при расчёте Precision/Recall для детекции.
-
-    all_preds: список словарей {"boxes", "scores", "labels"} (по изображениям)
-    all_targets: список словарей {"boxes", "labels"} в том же порядке
-    """
     tp, fp, fn = 0, 0, 0
 
     for preds, targets in zip(all_preds, all_targets):
@@ -76,10 +58,6 @@ def compute_precision_recall_f1(all_preds, all_targets, iou_threshold: float = 0
 
 
 def compute_map(all_preds, all_targets, iou_thresholds: list = None) -> dict:
-    """
-    Вычисляет mAP при заданных порогах IoU (по умолчанию 0.5 и стандартный
-    диапазон 0.5:0.95, как в COCO eval) с помощью torchmetrics.
-    """
     iou_thresholds = iou_thresholds or [0.5]
     metric = MeanAveragePrecision(iou_thresholds=iou_thresholds)
     metric.update(all_preds, all_targets)
@@ -92,10 +70,6 @@ def compute_map(all_preds, all_targets, iou_thresholds: list = None) -> dict:
 
 @torch.no_grad()
 def evaluate_torchvision_model(model, data_loader, device: str, class_list: list) -> dict:
-    """
-    Прогоняет модель (Faster R-CNN, SSD) по data_loader и считает mAP@0.5,
-    mAP@0.5:0.95, Precision, Recall, F1 на полном датасете.
-    """
     model.eval()
     all_preds, all_targets = [], []
 

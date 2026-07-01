@@ -1,13 +1,6 @@
 """
-train_faster_rcnn.py
-
-Обучение Faster R-CNN (день 8-9 плана / раздел 8.3-8.4 методички).
-
-Использует стандартный цикл обучения PyTorch (в отличие от YOLOv8/ultralytics,
-у torchvision detection-моделей нет встроенного метода .train()).
-
 Запуск:
-    python train_faster_rcnn.py
+python train_faster_rcnn.py
 """
 
 import time

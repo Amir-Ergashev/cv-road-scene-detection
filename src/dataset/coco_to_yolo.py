@@ -1,14 +1,3 @@
-"""
-src/dataset/coco_to_yolo.py
-
-Конвертация отфильтрованных COCO-аннотаций (data/processed/instances_*.json)
-в формат, который понимает YOLOv8 (ultralytics):
-    images/*.jpg
-    labels/*.txt  (class_id x_center y_center width height, нормализовано 0..1)
-
-Реализуется на этапе "Baseline-модель" (день 7 плана).
-"""
-
 import json
 import shutil
 from pathlib import Path
@@ -18,12 +7,6 @@ from src.dataset.dataset import TARGET_CLASSES
 
 def coco_to_yolo_format(coco_json_path: str, images_src_dir: str, output_dir: str,
                          class_list: list = None) -> None:
-    """
-    Конвертирует один COCO-сплит (train/val/test) в формат YOLO.
-
-    images_src_dir — папка с исходными jpg (data/raw/images/val2017)
-    output_dir — куда положить результат (например data/yolo_format/train)
-    """
     class_list = class_list or TARGET_CLASSES
 
     with open(coco_json_path, "r", encoding="utf-8") as f:
@@ -72,7 +55,6 @@ def coco_to_yolo_format(coco_json_path: str, images_src_dir: str, output_dir: st
 
 
 def write_yolo_yaml(output_path: str, dataset_root: str, class_list: list = None) -> None:
-    """Создаёт data.yaml — конфигурационный файл датасета для ultralytics YOLO."""
     class_list = class_list or TARGET_CLASSES
     lines = [
         f"path: {dataset_root}",

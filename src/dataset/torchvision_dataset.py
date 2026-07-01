@@ -1,13 +1,3 @@
-"""
-src/dataset/torchvision_dataset.py
-
-Датасет в формате, который ожидают torchvision detection-модели
-(Faster R-CNN, SSD): target — словарь с тензорами boxes [x1,y1,x2,y2],
-labels, image_id.
-
-Реализуется на этапе "Остальные модели" (день 8-9 плана).
-"""
-
 import json
 from pathlib import Path
 
@@ -20,14 +10,6 @@ from src.dataset.dataset import TARGET_CLASSES
 
 
 class TorchvisionCocoDataset(Dataset):
-    """
-    Оборачивает отфильтрованные COCO-аннотации (data/processed/instances_*.json)
-    в формат torchvision detection API.
-
-    Важно: метки классов сдвинуты на +1, так как класс 0 зарезервирован
-    под фон (background) в torchvision Faster R-CNN / SSD.
-    """
-
     def __init__(self, images_dir: str, annotations_path: str, class_list: list = None):
         self.images_dir = Path(images_dir)
         class_list = class_list or TARGET_CLASSES
@@ -82,5 +64,4 @@ class TorchvisionCocoDataset(Dataset):
 
 
 def collate_fn(batch):
-    """Нужен для DataLoader: изображения разного размера, нельзя стэкать в тензор."""
     return tuple(zip(*batch))

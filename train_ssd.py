@@ -1,10 +1,6 @@
 """
-train_ssd.py
-
-Обучение SSD300 (день 8-9 плана / раздел 8.3-8.4 методички).
-
 Запуск:
-    python train_ssd.py
+python train_ssd.py
 """
 
 import time

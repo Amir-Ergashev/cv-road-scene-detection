@@ -1,11 +1,6 @@
 """
-train_efficientdet.py
-
-Обучение EfficientDet-D0 (день 8-9 плана / раздел 8.3-8.4 методички).
-Использует библиотеку effdet (Ross Wightman) + timm для backbone.
-
 Запуск:
-    python train_efficientdet.py
+python train_efficientdet.py
 """
 
 import time

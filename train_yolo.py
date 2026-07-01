@@ -1,11 +1,6 @@
 """
-train_yolo.py
-
-Обучение baseline-модели YOLOv8 (день 7 плана / раздел 8.3-8.4 методички).
-Конфигурация для GPU: yolov8n, размер изображений 640, 50 эпох.
-
 Запуск:
-    python train_yolo.py
+python train_yolo.py
 """
 
 from src.dataset.coco_to_yolo import coco_to_yolo_format, write_yolo_yaml
@@ -22,7 +17,6 @@ DEVICE = "cuda"
 
 
 def prepare_yolo_data():
-    """Конвертирует train/val/test сплиты из COCO-формата в формат YOLO."""
     print("Конвертация данных в формат YOLO...")
     for split in ["train", "val", "test"]:
         coco_to_yolo_format(
@@ -34,7 +28,6 @@ def prepare_yolo_data():
 
 
 def train_baseline():
-    """Обучает YOLOv8n на подготовленных данных."""
     print(f"\nОбучение YOLOv8n: epochs={EPOCHS}, imgsz={IMG_SIZE}, "
           f"batch={BATCH_SIZE}, device={DEVICE}\n")
 

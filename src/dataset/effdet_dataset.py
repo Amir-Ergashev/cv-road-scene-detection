@@ -1,13 +1,3 @@
-"""
-src/dataset/effdet_dataset.py
-
-Датасет в формате, который ожидает библиотека effdet (EfficientDet):
-target — словарь с ключами bbox (список тензоров в формате [y1,x1,y2,x2]!),
-cls (1-индексированные классы без фона), img_size, img_scale.
-
-Реализуется на этапе "Остальные модели" (день 8-9 плана).
-"""
-
 import json
 from pathlib import Path
 
@@ -20,15 +10,6 @@ from src.dataset.dataset import TARGET_CLASSES
 
 
 class EffDetCocoDataset(Dataset):
-    """
-    Оборачивает отфильтрованные COCO-аннотации (data/processed/instances_*.json)
-    в формат effdet.
-
-    effdet ожидает боксы в формате [y1, x1, y2, x2] (YXYX), а не привычном
-    [x1, y1, x2, y2]. Классы 1-индексированы (без отдельного класса фона,
-    в отличие от torchvision-моделей).
-    """
-
     def __init__(self, images_dir: str, annotations_path: str,
                  class_list: list = None, image_size: int = 512):
         self.images_dir = Path(images_dir)
@@ -98,12 +79,6 @@ class EffDetCocoDataset(Dataset):
 
 
 def effdet_collate_fn(batch):
-    """
-    effdet ожидает: images как единый тензор [B,C,H,W], а targets — словарь,
-    где каждый ключ (bbox, cls, img_size, img_scale) содержит СПИСОК
-    значений по изображениям (не стэкнутый тензор для bbox/cls, так как
-    число объектов на изображении переменное).
-    """
     images = torch.stack([item[0] for item in batch])
     targets = {
         "bbox": [item[1]["bbox"] for item in batch],

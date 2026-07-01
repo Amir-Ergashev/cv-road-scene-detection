@@ -1,12 +1,3 @@
-"""
-src/dataset/dataset.py
-
-Загрузка и предобработка данных (подмножество COCO для детекции
-объектов дорожной обстановки).
-
-Реализуется на этапе "Подготовка данных" (день 6-7 плана).
-"""
-
 import json
 import random
 from collections import Counter
@@ -15,18 +6,10 @@ from pathlib import Path
 from torch.utils.data import Dataset
 from PIL import Image
 
-# Классы, относящиеся к дорожной обстановке (раздел 3.1 темы проекта)
 TARGET_CLASSES = ["person", "car", "bicycle", "motorcycle", "bus", "traffic light"]
 
 
 def filter_coco_by_classes(annotations_path: str, target_classes: list) -> dict:
-    """
-    Загружает COCO-аннотации и оставляет только изображения и объекты,
-    относящиеся к заданному списку классов.
-
-    Возвращает словарь в том же формате COCO (images, annotations, categories),
-    но отфильтрованный.
-    """
     with open(annotations_path, "r", encoding="utf-8") as f:
         coco = json.load(f)
 
@@ -71,14 +54,6 @@ def save_filtered_annotations(filtered: dict, output_path: str) -> None:
 
 def split_dataset(filtered: dict, train_ratio: float = 0.7, val_ratio: float = 0.15,
                    test_ratio: float = 0.15, seed: int = 42) -> dict:
-    """
-    Разбивает отфильтрованный COCO-датасет на train/val/test по изображениям
-    (раздел 3.4 методички: train_split=0.7, val_split=0.15, test_split=0.15).
-
-    Разбиение выполняется на уровне изображений (не аннотаций), чтобы все
-    объекты одного изображения попадали в один и тот же сплит. seed
-    фиксирован для воспроизводимости экспериментов.
-    """
     assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-6, "Доли должны суммироваться в 1.0"
 
     rng = random.Random(seed)
@@ -106,20 +81,11 @@ def split_dataset(filtered: dict, train_ratio: float = 0.7, val_ratio: float = 0
 
 
 def print_split_stats(splits: dict) -> None:
-    """Печатает статистику по получившимся train/val/test сплитам."""
     for name, subset in splits.items():
         print(f"{name}: {len(subset['images'])} изображений, {len(subset['annotations'])} аннотаций")
 
 
 class RoadSceneDataset(Dataset):
-    """
-    Датасет объектов дорожной обстановки на основе отфильтрованного COCO subset.
-
-    Ожидаемая структура:
-        data/raw/images/val2017/*.jpg
-        data/processed/instances_filtered.json  (создаётся filter_coco_by_classes)
-    """
-
     def __init__(self, images_dir: str, annotations_path: str, transform=None):
         self.images_dir = Path(images_dir)
         self.transform = transform

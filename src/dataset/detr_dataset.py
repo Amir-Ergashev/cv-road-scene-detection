@@ -1,13 +1,3 @@
-"""
-src/dataset/detr_dataset.py
-
-Датасет в формате, который ожидает DetrForObjectDetection (HuggingFace
-transformers): использует DetrImageProcessor для подготовки pixel_values,
-pixel_mask и labels (нормализованные боксы в формате cxcywh).
-
-Реализуется на этапе "Остальные модели" (день 8-9 плана).
-"""
-
 import json
 from pathlib import Path
 
@@ -19,13 +9,6 @@ from src.dataset.dataset import TARGET_CLASSES
 
 
 class DetrCocoDataset(Dataset):
-    """
-    Оборачивает отфильтрованные COCO-аннотации (data/processed/instances_*.json)
-    в формат, ожидаемый DetrImageProcessor. category_id переиндексируются
-    в диапазон [0, num_classes-1] (без отдельного класса фона —
-    "no object" обрабатывается DETR автоматически внутри головы).
-    """
-
     def __init__(self, images_dir: str, annotations_path: str,
                  processor, class_list: list = None):
         self.images_dir = Path(images_dir)
@@ -80,15 +63,6 @@ class DetrCocoDataset(Dataset):
 
 
 def detr_collate_fn(batch):
-    """
-    DETR-изображения после ресайза могут иметь разный размер (processor
-    сохраняет соотношение сторон) — нужен паддинг до общего максимального
-    размера в батче. pixel_mask показывает модели, какие пиксели реальные
-    (1), а какие — паддинг (0).
-
-    Реализован вручную (без processor.pad), так как API паддинга менялся
-    между версиями библиотеки transformers.
-    """
     pixel_values_list = [item[0] for item in batch]
     labels = [item[1] for item in batch]
 

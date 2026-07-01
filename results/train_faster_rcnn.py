@@ -1,13 +1,6 @@
 """
-train_faster_rcnn.py
-
-Обучение Faster R-CNN (день 8-9 плана / раздел 8.3-8.4 методички).
-
-Использует стандартный цикл обучения PyTorch (в отличие от YOLOv8/ultralytics,
-у torchvision detection-моделей нет встроенного метода .train()).
-
 Запуск:
-    python train_faster_rcnn.py
+python train_faster_rcnn.py
 """
 
 import time
@@ -51,7 +44,6 @@ def main():
     optimizer = torch.optim.SGD(params, lr=LEARNING_RATE, momentum=0.9, weight_decay=0.0005)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
-    # Mixed precision (AMP) — заметно ускоряет обучение на современных GPU
     use_amp = DEVICE == "cuda"
     scaler = torch.amp.GradScaler("cuda") if use_amp else None
 

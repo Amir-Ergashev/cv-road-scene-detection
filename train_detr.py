@@ -1,11 +1,6 @@
 """
-train_detr.py
-
-Обучение DETR (день 8-9 плана / раздел 8.3-8.4 методички).
-Использует библиотеку transformers (HuggingFace).
-
 Запуск:
-    python train_detr.py
+python train_detr.py
 """
 
 import time
